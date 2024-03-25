@@ -31,6 +31,7 @@ BRAND_CHOICES = (
     ('L', 'Laptop'),
     ('E', 'Earphone'),
     ('Ta', 'Tab'),
+    ('Ot','Other'),
 
 )
 
@@ -40,7 +41,7 @@ class Product(models.Model):
     discounted_price = models.FloatField()
     description = models.TextField()
     brand = models.CharField(max_length = 100)
-    catagory = models.CharField(max_length=2,choices = BRAND_CHOICES)
+    category = models.CharField(max_length=2,choices = BRAND_CHOICES)
     image = models.ImageField(upload_to='productimg')
     
     def __str__(self):
