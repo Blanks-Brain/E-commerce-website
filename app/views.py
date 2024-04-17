@@ -1,8 +1,10 @@
+from django.http import JsonResponse
 from django.shortcuts import render,redirect
 from django.views import View
 from .models import Customer,Product, Cart, OrderPlaced
 from .forms import CustomRegistrationForm,CustomProfileForm
 from django.contrib import messages
+from django.db.models import Q
 
 class ProductView(View):
     def get(self,request):
@@ -41,6 +43,58 @@ def show_cart(request):
       total_amount= amount+shipping_amount
 
       return render(request, 'app/addtocart.html' , {'carts':cart, 'totalamount': total_amount,'shippingammount':shipping_amount, 'amount':amount })
+
+def plusCart(request):
+   if request.method == 'GET':
+      prod_id = request.GET['prod_id']
+
+      c = Cart.objects.get(Q(product = prod_id) & Q(user = request.user))
+  
+      c.quantity+=1
+      c.save()
+      amount = 0.0
+      shipping_amount =50.0
+      total_amount = 0.0
+      cart_product = [p for p in Cart.objects.filter(user = request.user)]
+      if cart_product:
+         for p in cart_product:
+            tempamount = (p.quantity * p.product.selling_price)
+            amount+=tempamount
+
+      total_amount= amount+shipping_amount
+      data = {
+         'quantity': c.quantity,
+         'amount': amount,
+         'totalamount': total_amount
+      }
+      return JsonResponse(data)
+   
+def minusCart(request):
+   if request.method == 'GET':
+      prod_id = request.GET['prod_id']
+
+      c = Cart.objects.get(Q(product = prod_id) & Q(user = request.user))
+  
+      c.quantity-=1
+      c.save()
+      amount = 0.0
+      shipping_amount =50.0
+      total_amount = 0.0
+      cart_product = [p for p in Cart.objects.filter(user = request.user)]
+      if cart_product:
+         for p in cart_product:
+            tempamount = (p.quantity * p.product.selling_price)
+            amount+=tempamount
+
+      total_amount= amount+shipping_amount
+      data = {
+         'quantity': c.quantity,
+         'amount': amount,
+         'totalamount': total_amount
+      }
+      return JsonResponse(data)
+
+
 
 def buy_now(request):
  return render(request, 'app/buynow.html')
