@@ -24,8 +24,10 @@ def add_to_cart(request):
  user = request.user
  product_id = request.GET.get('prod_id')
  product = Product.objects.get(id=product_id)
+ 
  Cart(user = user , product = product).save()
  return redirect('/cart')
+ 
 
 def show_cart(request):
    if request.user.is_authenticated:
@@ -94,6 +96,29 @@ def minusCart(request):
       }
       return JsonResponse(data)
 
+def removeCart(request):
+   if request.method == 'GET':
+      prod_id = request.GET['prod_id']
+
+      c = Cart.objects.get(Q(product = prod_id) & Q(user = request.user))
+  
+      c.delete()
+      amount = 0.0
+      shipping_amount =50.0
+      total_amount = 0.0
+      cart_product = [p for p in Cart.objects.filter(user = request.user)]
+      if cart_product:
+         for p in cart_product:
+            tempamount = (p.quantity * p.product.selling_price)
+            amount+=tempamount
+
+      total_amount= amount+shipping_amount
+      data = {
+         'amount': amount,
+         'totalamount': total_amount
+      }
+      return JsonResponse(data)
+
 
 
 def buy_now(request):
@@ -152,4 +177,20 @@ class CustomerRegistrationView(View):
     
 
 def checkout(request):
- return render(request, 'app/checkout.html')
+ user  = request.user
+ address = Customer.objects.filter(user = user)
+ cart_item = Cart.objects.filter(user = user )
+ print(cart_item)
+ amount = 0.0
+ shipping_amount =50.0
+ total_amount = 0.0
+ cart_product = [p for p in Cart.objects.filter(user = request.user)]
+ price=[]
+ if cart_product:
+   for p in cart_product:
+      tempamount = (p.quantity * p.product.selling_price)
+      price.append(tempamount)
+      amount+=tempamount
+
+ total_amount= amount+shipping_amount
+ return render(request, 'app/checkout.html', {'address':address, 'totalamount':total_amount,'cart_item':cart_item,'price':price})
